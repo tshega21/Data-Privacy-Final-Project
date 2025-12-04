@@ -2,6 +2,7 @@ import sys
 
 sys.path.append("../")
 import os
+import shutil
 import pickle
 import numpy as np
 import random
@@ -56,7 +57,7 @@ def preprocess(args: Namespace) -> None:
     if not os.path.isdir(CURRENT_DIR / args.dataset):
         os.mkdir(CURRENT_DIR / args.dataset)
     if os.path.isdir(pickles_dir):
-        os.system(f"rm -rf {pickles_dir}")
+        shutil.rmtree(pickles_dir)
     os.mkdir(f"{pickles_dir}")
 
     ori_dataset, target_dataset = DATASET[args.dataset]
