@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ```
 ## Preprocess dataset
 
-MNIST and CIFAR-10 is prepared.🌟
+MNIST and CIFAR-10 is prepared.🌟cd
 
 ```
 cd data; python preprocess.py
