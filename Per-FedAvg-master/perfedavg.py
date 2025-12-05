@@ -85,10 +85,14 @@ class PerFedAvgClient:
         # for one client, occurs T times
         if hessian_free:  # Per-FedAvg(HF)
             for _ in range(self.local_epochs):
+                
+                #Set w^i_k+1 = w_k
                 temp_model = deepcopy(self.model)
+                
+                # retrive D^i_t on one clients data
                 data_batch_1 = self.get_data_batch()
                 
-                
+                # computes over D_i
                 grads = self.compute_grad(temp_model, data_batch_1)
                 for param, grad in zip(temp_model.parameters(), grads):
                     param.data.sub_(self.alpha * grad)
