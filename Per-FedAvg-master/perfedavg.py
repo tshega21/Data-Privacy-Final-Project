@@ -29,11 +29,15 @@ class PerFedAvgClient:
             self.device = torch.device("cpu")
         self.logger = logger
 
+        # number of passes over local data E
         self.local_epochs = local_epochs
         self.criterion = criterion
         self.id = client_id
         self.model = deepcopy(global_model)
+        
+        # learning rate
         self.alpha = alpha
+        # local learning rate
         self.beta = beta
         self.trainloader, self.valloader = get_dataloader(
             dataset, client_id, batch_size, valset_ratio
@@ -78,10 +82,13 @@ class PerFedAvgClient:
         return SerializationTool.serialize_model(self.model)
 
     def _train(self, hessian_free=False):
+        # for one client, occurs T times
         if hessian_free:  # Per-FedAvg(HF)
             for _ in range(self.local_epochs):
                 temp_model = deepcopy(self.model)
                 data_batch_1 = self.get_data_batch()
+                
+                
                 grads = self.compute_grad(temp_model, data_batch_1)
                 for param, grad in zip(temp_model.parameters(), grads):
                     param.data.sub_(self.alpha * grad)

@@ -2,10 +2,15 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
+# this file defines a neural net
+
 
 class elu(nn.Module):
     def __init__(self) -> None:
         super(elu, self).__init__()
+
+# defines how data is passed into neural network
+# feed forward algorithm
 
     def forward(self, x):
         return torch.where(x >= 0, x, 0.2 * (torch.exp(x) - 1))
@@ -26,6 +31,8 @@ class linear(nn.Module):
 class MLP_MNIST(nn.Module):
     def __init__(self) -> None:
         super(MLP_MNIST, self).__init__()
+        
+        #pass data through fc1
         self.fc1 = linear(28 * 28, 80)
         self.fc2 = linear(80, 60)
         self.fc3 = linear(60, 10)
