@@ -58,18 +58,20 @@ if __name__ == "__main__":
         model_params_cache = []
         # client local training
         for client_id in selected_clients:
+            # train function of perFedAvg called
             serialized_model_params = clients[client_id].train(
                 global_model=global_model,
                 hessian_free=args.hf,
                 eval_while_training=args.eval_while_training,
             )
+            # sending local update to the server w_i k+1 T
             model_params_cache.append(serialized_model_params)
 
-        # aggregate model parameters
+        # aggregate and average model parameters
         aggregated_model_params = Aggregators.fedavg_aggregate(model_params_cache)
         SerializationTool.deserialize_model(global_model, aggregated_model_params)
         logger.log("=" * 60)
-    # eval
+    # evals
     pers_epochs = args.local_epochs if args.pers_epochs == -1 else args.pers_epochs
     logger.log("=" * 20, "EVALUATION", "=" * 20, style="bold blue")
     loss_before = []
