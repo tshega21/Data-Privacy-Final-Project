@@ -6,7 +6,8 @@ from typing import Tuple, Union
 from collections import OrderedDict
 from data.utils import get_dataloader
 from fedlab.utils.serialization import SerializationTool
-
+from opacus import PrivacyEngine
+#from tqdm import tqdm
 
 class PerFedAvgClient:
     def __init__(
@@ -64,6 +65,8 @@ class PerFedAvgClient:
             loss_before, acc_before = utils.eval(
                 self.model, self.valloader, self.criterion, self.device
             )
+            
+        
         self._train(hessian_free)
 
         if eval_while_training:
@@ -94,6 +97,7 @@ class PerFedAvgClient:
                 
                 # computes over D_i
                 grads = self.compute_grad(temp_model, data_batch_1)
+                
                 for param, grad in zip(temp_model.parameters(), grads):
                     param.data.sub_(self.alpha * grad)
 
@@ -102,9 +106,8 @@ class PerFedAvgClient:
 
                 data_batch_3 = self.get_data_batch()
 
-                grads_2nd = self.compute_grad(
-                    self.model, data_batch_3, v=grads_1st, second_order_grads=True
-                )
+                grads_2nd = self.compute_grad(self.model, data_batch_3, v=grads_1st, second_order_grads=True )
+                
                 # NOTE: Go check https://github.com/KarhouTam/Per-FedAvg/issues/2 if you confuse about the model update.
                 for param, grad1, grad2 in zip(
                     self.model.parameters(), grads_1st, grads_2nd
@@ -128,7 +131,10 @@ class PerFedAvgClient:
                 data_batch_1 = self.get_data_batch()
                 grads = self.compute_grad(temp_model, data_batch_1)
 
+
+                # for each parameter and corresponding gradient value
                 for param, grad in zip(temp_model.parameters(), grads):
+                    # perform in-place subtraction to update model parameters
                     param.data.sub_(self.alpha * grad)
 
                 data_batch_2 = self.get_data_batch()
@@ -178,7 +184,49 @@ class PerFedAvgClient:
             loss = self.criterion(logit, y)
             grads = torch.autograd.grad(loss, model.parameters())
             return grads
+    """    
+    def compute_grad_dp(
+        self,
+        model: torch.nn.Module,
+        data_batch: Tuple[torch.Tensor, torch.Tensor],
+        v: Union[Tuple[torch.Tensor, ...], None] = None,
+        second_order_grads=False,
+    ):
+        x, y = data_batch
+        if second_order_grads:
+            frz_model_params = deepcopy(model.state_dict())
+            delta = 1e-3
+            dummy_model_params_1 = OrderedDict()
+            dummy_model_params_2 = OrderedDict()
+            with torch.no_grad():
+                for (layer_name, param), grad in zip(model.named_parameters(), v):
+                    dummy_model_params_1.update({layer_name: param + delta * grad})
+                    dummy_model_params_2.update({layer_name: param - delta * grad})
 
+            model.load_state_dict(dummy_model_params_1, strict=False)
+            logit_1 = model(x)
+            loss_1 = self.criterion(logit_1, y)
+            grads_1 = torch.autograd.grad(loss_1, model.parameters())
+
+            model.load_state_dict(dummy_model_params_2, strict=False)
+            logit_2 = model(x)
+            loss_2 = self.criterion(logit_2, y)
+            grads_2 = torch.autograd.grad(loss_2, model.parameters())
+
+            model.load_state_dict(frz_model_params)
+
+            grads = []
+            with torch.no_grad():
+                for g1, g2 in zip(grads_1, grads_2):
+                    grads.append((g1 - g2) / (2 * delta))
+            return grads
+
+        else:
+            logit = model(x)
+            loss = self.criterion(logit, y)
+            grads = torch.autograd.grad(loss, model.parameters())
+            return grads
+"""
     def pers_N_eval(self, global_model: torch.nn.Module, pers_epochs: int):
         self.model.load_state_dict(global_model.state_dict())
 

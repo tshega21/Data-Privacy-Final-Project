@@ -63,7 +63,11 @@ def eval(
     num_samples = 0
     acc = 0
     for x, y in dataloader:
+        
+        # moves tensor to GPU if available 
         x, y = x.to(device), y.to(device)
+        
+        #logit = raw, unormalized output, vector of scores for each class
         logit = model(x)
         # total_loss += criterion(logit, y) / y.size(-1)
         total_loss += criterion(logit, y)
@@ -71,6 +75,7 @@ def eval(
         acc += torch.eq(pred, y).int().sum()
         num_samples += y.size(-1)
     model.train()
+    # returns average loss and average accuracy
     return total_loss, acc / num_samples
 
 

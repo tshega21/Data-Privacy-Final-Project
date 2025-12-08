@@ -1,6 +1,6 @@
 import pickle
 import os
-from torch.utils.data import random_split, DataLoader
+from torch.utils.data import random_split, DataLoader, RandomSampler
 from dataset import MNISTDataset, CIFARDataset
 from path import Path
 
@@ -22,10 +22,16 @@ def get_dataloader(dataset: str, client_id: int, batch_size=20, valset_ratio=0.1
     val_num_samples = int(valset_ratio * len(client_dataset))
     train_num_samples = len(client_dataset) - val_num_samples
 
+    # randomly splits clients data into training set and valset (test set)
     trainset, valset = random_split(
         client_dataset, [train_num_samples, val_num_samples]
     )
-    trainloader = DataLoader(trainset, batch_size, drop_last=True)
+    
+    # where we can define how to load and iterate over datasets 
+    
+    #CHANGE I AM MAKING TO RANDOM SAMPLING
+    r_sampler = RandomSampler(trainset, replacement = False)
+    trainloader = DataLoader(trainset, batch_size, sampler = r_sampler, drop_last=True)
     valloader = DataLoader(valset, batch_size)
 
     return trainloader, valloader

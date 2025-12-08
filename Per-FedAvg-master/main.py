@@ -23,9 +23,12 @@ if __name__ == "__main__":
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
+        
     global_model = get_model(args.dataset, device)
     logger = Console(record=args.log)
     logger.log(f"Arguments:", dict(args._get_kwargs()))
+    
+    
     clients_4_training, clients_4_eval, client_num_in_total = get_client_id_indices(
         args.dataset
     )
@@ -52,11 +55,12 @@ if __name__ == "__main__":
     for _ in track(
         range(args.global_epochs), "Training...", console=logger, disable=args.log
     ):
-        # select clients
+        # where sampling or selection of clients occurs
         selected_clients = random.sample(clients_4_training, args.client_num_per_round)
 
         model_params_cache = []
-        # client local training
+        
+        # client's local training
         for client_id in selected_clients:
             # train function of perFedAvg called
             serialized_model_params = clients[client_id].train(
@@ -71,6 +75,7 @@ if __name__ == "__main__":
         aggregated_model_params = Aggregators.fedavg_aggregate(model_params_cache)
         SerializationTool.deserialize_model(global_model, aggregated_model_params)
         logger.log("=" * 60)
+        
     # evals
     pers_epochs = args.local_epochs if args.pers_epochs == -1 else args.pers_epochs
     logger.log("=" * 20, "EVALUATION", "=" * 20, style="bold blue")

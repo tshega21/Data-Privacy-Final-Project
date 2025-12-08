@@ -44,6 +44,8 @@ def preprocess(args: Namespace) -> None:
     np.random.seed(args.seed)
     random.seed(args.seed)
     torch.manual_seed(args.seed)
+    
+    # splits def 200 clients into 180 training and 20 testing clients
     num_train_clients = int(args.client_num_in_total * args.fraction)
     num_test_clients = args.client_num_in_total - num_train_clients
 
