@@ -1,6 +1,7 @@
 import rich
 import torch
 import utils
+import numpy as np
 from copy import deepcopy
 from typing import Tuple, Union
 from collections import OrderedDict
@@ -96,17 +97,17 @@ class PerFedAvgClient:
                 data_batch_1 = self.get_data_batch()
                 
                 # computes over D_i
-                grads = self.compute_grad(temp_model, data_batch_1)
+                grads = self.compute_grad_dp(temp_model, data_batch_1)
                 
                 for param, grad in zip(temp_model.parameters(), grads):
                     param.data.sub_(self.alpha * grad)
 
                 data_batch_2 = self.get_data_batch()
-                grads_1st = self.compute_grad(temp_model, data_batch_2)
+                grads_1st = self.compute_grad_dp(temp_model, data_batch_2)
 
                 data_batch_3 = self.get_data_batch()
 
-                grads_2nd = self.compute_grad(self.model, data_batch_3, v=grads_1st, second_order_grads=True )
+                grads_2nd = self.compute_grad_dp(self.model, data_batch_3, v=grads_1st, second_order_grads=True )
                 
                 # NOTE: Go check https://github.com/KarhouTam/Per-FedAvg/issues/2 if you confuse about the model update.
                 for param, grad1, grad2 in zip(
@@ -184,37 +185,69 @@ class PerFedAvgClient:
             loss = self.criterion(logit, y)
             grads = torch.autograd.grad(loss, model.parameters())
             return grads
-    """    
+       
+       
+       
+    def s_grad_dp(self, model: torch.nn.Module, data_batch, C = 4.0, Sigma = 2.0):
+        x, y = data_batch
+        noisy_grads = []
+        for x_val, y_val in zip (x,y):
+            x_val = x_val.unsqueeze(0)      # shape: (1, C, H, W)
+            y_val = y_val.unsqueeze(0)
+            logit = model(x_val)
+            loss = self.criterion(logit, y_val)
+            record_level_grad = torch.autograd.grad(loss, model.parameters(), retain_graph=True)
+            
+            grad_norm = torch.sqrt(sum(g.norm(2)**2 for g in record_level_grad))
+            
+            clip_grad = [g / max(1, grad_norm/C) for g in record_level_grad]
+            
+            noisy_grad = [g + torch.normal(mean = 0, std = C*Sigma, size = g.size()) for g in clip_grad]
+            
+            noisy_grads.append(noisy_grad)
+       
+            
+        dp_grad = []
+        for p in range(len(noisy_grads[0])):
+            summed = sum([each_grad[p] for each_grad in noisy_grads])
+            summed = summed * (1/len(x))
+            dp_grad.append(summed)
+            
+        return dp_grad
+
+
     def compute_grad_dp(
         self,
         model: torch.nn.Module,
         data_batch: Tuple[torch.Tensor, torch.Tensor],
         v: Union[Tuple[torch.Tensor, ...], None] = None,
         second_order_grads=False,
+        C = 4.0, 
+        Sigma = 2.0
     ):
-        x, y = data_batch
+        # seeds noise addition
+        np.random.seed(42)       
         if second_order_grads:
             frz_model_params = deepcopy(model.state_dict())
             delta = 1e-3
+            
             dummy_model_params_1 = OrderedDict()
             dummy_model_params_2 = OrderedDict()
+            
+            #Method of estimating hessian gradient
             with torch.no_grad():
                 for (layer_name, param), grad in zip(model.named_parameters(), v):
                     dummy_model_params_1.update({layer_name: param + delta * grad})
                     dummy_model_params_2.update({layer_name: param - delta * grad})
 
             model.load_state_dict(dummy_model_params_1, strict=False)
-            logit_1 = model(x)
-            loss_1 = self.criterion(logit_1, y)
-            grads_1 = torch.autograd.grad(loss_1, model.parameters())
-
+            grads_1 = self.s_grad_dp( model, data_batch, C, Sigma)             
+               
             model.load_state_dict(dummy_model_params_2, strict=False)
-            logit_2 = model(x)
-            loss_2 = self.criterion(logit_2, y)
-            grads_2 = torch.autograd.grad(loss_2, model.parameters())
+            grads_2 = self.s_grad_dp( model, data_batch, C, Sigma)
 
-            model.load_state_dict(frz_model_params)
 
+            # calculates hessian approximation, post-processing
             grads = []
             with torch.no_grad():
                 for g1, g2 in zip(grads_1, grads_2):
@@ -222,11 +255,15 @@ class PerFedAvgClient:
             return grads
 
         else:
-            logit = model(x)
-            loss = self.criterion(logit, y)
-            grads = torch.autograd.grad(loss, model.parameters())
+            grads = self.s_grad_dp( model, data_batch, C, Sigma)
             return grads
-"""
+                
+        
+    
+        
+        
+        
+
     def pers_N_eval(self, global_model: torch.nn.Module, pers_epochs: int):
         self.model.load_state_dict(global_model.state_dict())
 

@@ -57,6 +57,9 @@ if __name__ == "__main__":
     ):
         # where sampling or selection of clients occurs
         selected_clients = random.sample(clients_4_training, args.client_num_per_round)
+        # sample with different probabilities
+        #random.sample(clients, k=, weights=[])
+        # sample based on tiers
 
         model_params_cache = []
         
