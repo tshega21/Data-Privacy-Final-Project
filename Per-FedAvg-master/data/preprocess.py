@@ -165,24 +165,34 @@ def randomly_alloc_classes(
     transform=None,
     target_transform=None,
 ) -> Tuple[List[Dataset], Dict[str, Dict[str, int]]]:
+
+    # slicing
     dict_users = noniid_slicing(ori_dataset, num_clients, num_clients * num_classes)
-    stats = {}
-    for i, indices in dict_users.items():
-        targets_numpy = np.array(ori_dataset.targets)
-        stats[f"client {i}"] = {"x": 0, "y": {}}
-        stats[f"client {i}"]["x"] = len(indices)
-        stats[f"client {i}"]["y"] = Counter(targets_numpy[indices].tolist())
+    targets_numpy = np.array(ori_dataset.targets)
+
+    # convert to list of (client_id, indices)
+    shard_list = [(cid, idxs) for cid, idxs in dict_users.items()]
+
+    # sort by shard size (ascending order)
+    shard_list_sorted = sorted(shard_list, key=lambda x: len(x[1]))
+
     datasets = []
-    
-        
-    for indices in dict_users.values():
-        datasets.append(
-            target_dataset(
-                [ori_dataset[i] for i in indices],
-                transform=transform,
-                target_transform=target_transform,
-            )
+    stats = {}
+
+    # reassign with new client IDs based on sorted order 
+    for new_id, (old_id, indices) in enumerate(shard_list_sorted):
+
+        ds = target_dataset(
+            [ori_dataset[i] for i in indices],
+            transform=transform,
+            target_transform=target_transform,
         )
+        datasets.append(ds)
+
+        stats[f"client {new_id}"] = {
+            "x": len(indices),
+            "y": dict(Counter(targets_numpy[indices].tolist()))
+        }
 
     return datasets, stats
 
