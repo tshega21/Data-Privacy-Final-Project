@@ -1,4 +1,5 @@
-# Personalized federated learning with theoretical guarantees: A model-agnostic meta-learning approach [[NIPS 2020]](https://proceedings.neurips.cc/paper/2020/hash/24389bfe4fe2eba8bf9aa9203a44cdad-Abstract.html)
+# Personalized federated learning with theoretical guarantees: A model-agnostic meta-learning approach with DP
+[[NIPS 2020]](https://proceedings.neurips.cc/paper/2020/hash/24389bfe4fe2eba8bf9aa9203a44cdad-Abstract.html)
 
 PyTorch Implementation of Per-FedAvg.
 

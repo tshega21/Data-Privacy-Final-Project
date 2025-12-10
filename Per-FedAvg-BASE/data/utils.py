@@ -11,7 +11,7 @@ DATASET_DICT = {
 CURRENT_DIR = Path(__file__).parent.abspath()
 
 
-def get_dataloader(dataset: str, client_id: int, batch_size=20, valset_ratio=0.1):
+def get_dataloader(dataset: str, client_id: int, batch_size = 20, valset_ratio=0.1):
     pickles_dir = CURRENT_DIR / dataset / "pickles"
     if os.path.isdir(pickles_dir) is False:
         raise RuntimeError("Please preprocess and create pickles first.")
@@ -30,7 +30,7 @@ def get_dataloader(dataset: str, client_id: int, batch_size=20, valset_ratio=0.1
     # where we can define how to load and iterate over datasets 
     
     #CHANGE I AM MAKING TO RANDOM SAMPLING
-    r_sampler = RandomSampler(trainset, replacement = True)
+    r_sampler = RandomSampler(trainset, replacement = True, num_samples = batch_size)
     trainloader = DataLoader(trainset, batch_size, sampler = r_sampler, drop_last=True)
     valloader = DataLoader(valset, batch_size)
 
