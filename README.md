@@ -8,7 +8,7 @@ This code is adapted from Karhoutam - https://github.com/KarhouTam/Per-FedAvg
 ## Per-FedAvg- DP
     - personalized federated learning with differential privacy
 ## Per-FedAvg -DP-FINAL
-    - personalized federated learning with differential privacy and sampling method
+    - personalized federated learning with differential privacy and a new sampling method
 
 ## Instructions: For each of these folders, execute the following within the directory. 
 
