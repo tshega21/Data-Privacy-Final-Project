@@ -4,4 +4,3 @@ numpy~=1.26.2
 fedlab~=1.1.4
 torchvision~=0.24.1
 rich~=12.2.0
-opacus~=1.5.4
