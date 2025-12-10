@@ -75,3 +75,5 @@ python main.py
 
 `--log`: Non-zero value for recording experiment's output to a `.html` file in `./log`. Default: `0`
 
+### To reproduce Data
+Please go into utils.py in the data folder in order to set the deafult seed to whatever you may need it to be.
