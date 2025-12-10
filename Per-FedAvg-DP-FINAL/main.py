@@ -94,13 +94,14 @@ if __name__ == "__main__":
         range(args.global_epochs), "Training...", console=logger, disable=args.log
     ):
         # where sampling or selection of clients occurs
-        # OLD WAY: selected_clients = random.sample(clients_4_training, args.client_num_per_round)
+        # OLD WAY: 
+        # selected_clients = random.sample(clients_4_training, args.client_num_per_round)
 
         # weighted client sampling based on shard size and privacy
         selected_clients = np.random.choice(
         clients_4_training,
         size=args.client_num_per_round,
-        replace=False,
+        replace= True,
         p=probabilities,   # the distribution from above
         )
 

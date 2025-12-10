@@ -1,0 +1,6 @@
+torch~=2.9.1
+path~=16.4.0
+numpy~=1.26.2
+fedlab~=1.1.4
+torchvision~=0.24.1
+rich~=12.2.0

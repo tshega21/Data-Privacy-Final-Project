@@ -200,7 +200,7 @@ class PerFedAvgClient:
             
             clip_grad = [g / max(1, grad_norm/C) for g in record_level_grad]
             
-            noisy_grad = [g + torch.normal(mean = 0, std = C*Sigma, size = g.size()) for g in clip_grad]
+            noisy_grad = [g + torch.normal(mean = 0, std = C*Sigma, size = g.size()).to(g.device) for g in clip_grad]
             
             noisy_grads.append(noisy_grad)
        

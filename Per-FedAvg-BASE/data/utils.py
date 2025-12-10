@@ -30,7 +30,7 @@ def get_dataloader(dataset: str, client_id: int, batch_size=20, valset_ratio=0.1
     # where we can define how to load and iterate over datasets 
     
     #CHANGE I AM MAKING TO RANDOM SAMPLING
-    r_sampler = RandomSampler(trainset, replacement = False)
+    r_sampler = RandomSampler(trainset, replacement = True)
     trainloader = DataLoader(trainset, batch_size, sampler = r_sampler, drop_last=True)
     valloader = DataLoader(valset, batch_size)
 
