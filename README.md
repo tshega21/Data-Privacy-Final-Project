@@ -39,9 +39,9 @@ cd data; python preprocess.py
 ```
 ###
 
+```
 python main.py
-
-
+```
 
 ### Hyperparameters are defined in utils.py 
 
