@@ -15,6 +15,7 @@ from perfedavg import PerFedAvgClient
 from data.utils import get_client_id_indices
 import numpy as np
 import json
+import pandas as pd
 
 results_file = open("results_seed18.txt", "w")
 
@@ -52,13 +53,17 @@ if __name__ == "__main__":
 
     # Get shard sizes aligned with clients_4_training
     # shard_sizes[i] corresponds to client_id = clients_4_training[i]
-    shard_sizes = np.array(
+    data_sizes = np.array(
         [all_stats[f"client {cid}"]["x"] for cid in clients_4_training],
         dtype=float,
     )
+    
+    df = pd.DataFrame()
+    df["Dataset Size"] = data_sizes
+    
 
     # larger shard with higher probability
-    weights = shard_sizes.copy()
+    weights = data_sizes.copy()
 
     # raw probabilities from weights
     prob_raw = weights / weights.sum()
@@ -69,7 +74,19 @@ if __name__ == "__main__":
 
     # renormalize so probabilities sums up to 1
     probabilities = prob_floored / prob_floored.sum()
+    
+    
+    b = [(120/size) for size in data_sizes]
+    print(b)
+    epsilon = 8
+    E = args.local_epochs
+    privacy_guarantee = [(batch_rate*epsilon*np.sqrt(E*batch_rate)) for batch_rate in b]
+    
+    print(privacy_guarantee)
+    df["Privacy"] = privacy_guarantee
+    df.to_csv('privacy_guarantee.csv')
 
+    
 
     # init clients
     clients = [
@@ -88,6 +105,8 @@ if __name__ == "__main__":
         )
         for client_id in range(client_num_in_total)
     ]
+    
+    
     # training
     logger.log("=" * 20, "TRAINING", "=" * 20, style="bold red")
     for _ in track(
