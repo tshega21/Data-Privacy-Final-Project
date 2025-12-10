@@ -29,8 +29,6 @@ def noniid_slicing(dataset, num_clients, num_shards):
 
     total_samples = len(dataset)
 
-    # ---- Step 1: Generate random shard sizes that sum EXACTLY to total_samples ----
-    # Create random positive numbers
     raw = np.random.rand(num_shards)
     shard_sizes = (raw / raw.sum() * total_samples).astype(int)
 
@@ -38,26 +36,22 @@ def noniid_slicing(dataset, num_clients, num_shards):
     diff = total_samples - shard_sizes.sum()
     shard_sizes[0] += diff  # adjust the first shard so total matches exactly
 
-    # Safety: ensure no shard becomes negative
-    assert all(shard_sizes >= 0), "Shard sizes must be non-negative"
-    assert shard_sizes.sum() == total_samples, "Shard sizes must sum to dataset length"
 
-    # ---- Step 2: Sort data by label ----
+    # Sort data by label 
     labels = np.array(dataset.targets)
     idxs = np.arange(total_samples)
     sorted_idxs = idxs[np.argsort(labels)]
 
-    # ---- Step 3: Slice sorted indices into variable-sized shards ----
+    # Slice sorted indices into variable-sized shards 
     shards = []
     ptr = 0
     for size in shard_sizes:
         shards.append(sorted_idxs[ptr:ptr+size])
         ptr += size
 
-    # ---- Step 4: Assign shards to clients ----
+    # Assign shards to clients
     shards_per_client = num_shards // num_clients
-   # if num_shards % num_clients != 0:
-        #warnings.warn("num_shards is not divisible by num_clients; some shards unused.")
+   
 
     dict_users = {i: np.array([], dtype=np.int64) for i in range(num_clients)}
     shard_ids = np.arange(num_shards)
