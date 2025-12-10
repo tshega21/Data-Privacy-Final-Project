@@ -9,7 +9,7 @@ def get_args():
     parser = ArgumentParser()
     parser.add_argument("--alpha", type=float, default=1e-2)
     parser.add_argument("--beta", type=float, default=1e-3)
-    parser.add_argument("--global_epochs", type=int, default=200)
+    parser.add_argument("--global_epochs", type=int, default=10)
     parser.add_argument("--local_epochs", type=int, default=4)
     parser.add_argument(
         "--pers_epochs",
@@ -23,7 +23,7 @@ def get_args():
         default=1,
         help="0 for performing Per-FedAvg(FO), others for Per-FedAvg(HF)",
     )
-    parser.add_argument("--batch_size", type=int, default=40)
+    parser.add_argument("--batch_size", type=int, default=15)
     parser.add_argument(
         "--valset_ratio",
         type=float,
