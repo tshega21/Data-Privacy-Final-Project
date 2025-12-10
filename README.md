@@ -2,7 +2,7 @@
 
 This code is adapted from Karhoutam - https://github.com/KarhouTam/Per-FedAvg
 
-
+## Each folder represents different frameworks of the model.
 ## Per-FedAVG-BASE
     - personalized federated learning
 ## Per-FedAvg- DP
