@@ -16,7 +16,65 @@ from dataset import MNISTDataset, CIFARDataset
 from collections import Counter
 from typing import Dict, List, Tuple
 from torch.utils.data import Dataset
-from fedlab.utils.dataset.slicing import noniid_slicing
+#from fedlab.utils.dataset.slicing import noniid_slicing
+
+
+
+def noniid_slicing(dataset, num_clients, num_shards):
+    """
+    Slice dataset into non-IID partitions using variable-size shards.
+    """
+
+    np.random.seed(21)
+
+    total_samples = len(dataset)
+
+    # ---- Step 1: Generate random shard sizes that sum EXACTLY to total_samples ----
+    # Create random positive numbers
+    raw = np.random.rand(num_shards)
+    shard_sizes = (raw / raw.sum() * total_samples).astype(int)
+
+    # Fix rounding mismatch
+    diff = total_samples - shard_sizes.sum()
+    shard_sizes[0] += diff  # adjust the first shard so total matches exactly
+
+    # Safety: ensure no shard becomes negative
+    assert all(shard_sizes >= 0), "Shard sizes must be non-negative"
+    assert shard_sizes.sum() == total_samples, "Shard sizes must sum to dataset length"
+
+    # ---- Step 2: Sort data by label ----
+    labels = np.array(dataset.targets)
+    idxs = np.arange(total_samples)
+    sorted_idxs = idxs[np.argsort(labels)]
+
+    # ---- Step 3: Slice sorted indices into variable-sized shards ----
+    shards = []
+    ptr = 0
+    for size in shard_sizes:
+        shards.append(sorted_idxs[ptr:ptr+size])
+        ptr += size
+
+    # ---- Step 4: Assign shards to clients ----
+    shards_per_client = num_shards // num_clients
+   # if num_shards % num_clients != 0:
+        #warnings.warn("num_shards is not divisible by num_clients; some shards unused.")
+
+    dict_users = {i: np.array([], dtype=np.int64) for i in range(num_clients)}
+    shard_ids = np.arange(num_shards)
+
+    for client in range(num_clients):
+        chosen = np.random.choice(shard_ids, shards_per_client, replace=False)
+        shard_ids = np.setdiff1d(shard_ids, chosen)
+
+        for s in chosen:
+            dict_users[client] = np.concatenate((dict_users[client], shards[s]))
+
+    return dict_users
+
+
+
+
+
 
 CURRENT_DIR = Path(__file__).parent.abspath()
 
@@ -91,6 +149,7 @@ def preprocess(args: Namespace) -> None:
     for client_id, dataset in enumerate(all_datasets):
         with open(pickles_dir / str(client_id) + ".pkl", "wb") as f:
             pickle.dump(dataset, f)
+            
     with open(pickles_dir / "seperation.pkl", "wb") as f:
         pickle.dump(
             {
@@ -120,6 +179,8 @@ def randomly_alloc_classes(
         stats[f"client {i}"]["x"] = len(indices)
         stats[f"client {i}"]["y"] = Counter(targets_numpy[indices].tolist())
     datasets = []
+    
+        
     for indices in dict_users.values():
         datasets.append(
             target_dataset(
@@ -128,6 +189,7 @@ def randomly_alloc_classes(
                 target_transform=target_transform,
             )
         )
+
     return datasets, stats
 
 
