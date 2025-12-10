@@ -7,8 +7,6 @@ from typing import Tuple, Union
 from collections import OrderedDict
 from data.utils import get_dataloader
 from fedlab.utils.serialization import SerializationTool
-from opacus import PrivacyEngine
-#from tqdm import tqdm
 
 class PerFedAvgClient:
     def __init__(
