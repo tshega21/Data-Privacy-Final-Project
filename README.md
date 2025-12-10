@@ -25,7 +25,12 @@ rich~=12.2.0
 ```
 pip install -r requirements.txt
 ```
-pip uninstall pynvml 
+then, please proceed with:
+
+```
+pip uninstall pynvml
+```
+to get rid of dependencies.
 
 ### Preprocess dataset
 
