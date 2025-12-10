@@ -16,7 +16,7 @@ from data.utils import get_client_id_indices
 import numpy as np
 import json
 
-results_file = open("results.txt", "w")
+results_file = open("results_seed18.txt", "w")
 
 if __name__ == "__main__":
     args = get_args()
@@ -97,6 +97,8 @@ if __name__ == "__main__":
         # OLD WAY: 
         # selected_clients = random.sample(clients_4_training, args.client_num_per_round)
 
+        np.random.seed(21)
+
         # weighted client sampling based on shard size and privacy
         selected_clients = np.random.choice(
         clients_4_training,
@@ -164,7 +166,7 @@ if __name__ == "__main__":
     results_file.close()
     
     # SAVE ALL LOGS TO TEXT FILE
-    with open("results.txt", "w") as f:
+    with open("results_seed18.txt", "w") as f:
         f.write(logger.export_text())
 
     if args.log:
